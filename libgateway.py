@@ -6,8 +6,12 @@
 
 
 ### IMPORTS ###
+# global imports
+import urllib.parse
+import hashlib
+
+# local imports
 from libbasic import get_page
-from libdatabase import get_IP_attributes, IPDB_to_localDB
 
 
 #####
@@ -120,15 +124,13 @@ def get_my_IP():
 # Parameter(s):
 #     IP - IP address of server to connect to
 # Return value(s):
-#     -3 if the connection was unsuccessful after database refresh
 #     -2 if attempting to connect to self
-#     -1 if connectParam couldn't be retrieved from database
+#     -1 if connection was unsuccessful
 #     0 if connection was successful
 # Description:
-#     Connects to the IP address specified in the parameter. If
-#     the connection threw no errors but was unsuccessful, the
-#     database is refreshed for that IP address (most likely bad
-#     connectParam) and it is attempted again.
+#     Connects to the IP address specified in the parameter. If an
+#     attempt was made to connect to oneself, an error code is
+#     returned.
 # 
 #####
 def connect(IP):
@@ -137,25 +139,17 @@ def connect(IP):
         print("Cannot connect to self")
         return -2
 
-    # try connecting
-    return_code = connect_help(IP)
+    # get connect parameter
+    connectParam = get_connection_param(IP)
 
-    # if page was requested but no connection made, database needs to be updated
-    if return_code == -2:
-        print("Refreshing connectParam and connecting again...")
-        IPDB_to_localDB(IP)
-        
-        # try connecting again
-        if connect_help(IP) == -2:
-            print("Connection unsuccessful")
-            return -3
-    
-    # if error was thrown while connecting
-    elif return_code == -1:
-        print("ConnectParam could not be retrieved from database")
+    # connect
+    URL = "index.php?action=gate&a2=connect&con_ip="+IP+"&"+connectParam
+    get_page(URL)
+
+    # ensure connection was successful
+    if get_current_connection() != IP:
+        print("Could not connect to IP")
         return -1
-
-    # all good
     else:
         return 0
 
@@ -165,35 +159,34 @@ def connect(IP):
 # Parameter(s):
 #     IP - IP address of server to connect to
 # Return value(s):
-#     -2 if the connection was unsuccessful
-#     -1 if connectParam couldn't be retrieved from database
-#     0 if connection was successful
+#     URL-encoded GET parameter needed to connect to an IP
 # Description:
-#     Helper function for the connect() function. Retrieves the
-#     connectParam from the database, sends the HTTP request, and
-#     checks to see if the connection succeeded.
+#     This extracts the URL-encoded JavaScript from the connect
+#     page, parses it, extracts the randomly-generated beginning
+#     and end values, and calculates the MD5 hash of beginning+IP+end.
+#     This MD5 hash is returned in the form 'beginning=md5_hash' to
+#     be used to connect to an IP.
 # 
 #####
-def connect_help(IP):
-    # get connect parameter
-    connectParam = get_IP_attributes(IP, ["connectParam"])
-
-    # check for error
-    if connectParam == -1:
-        print("Connect failed - connectParam not received")
-        return -1
-
-    # connect
-    URL = "index.php?action=gate&a2=connect&con_ip="+IP+"&"+connectParam[0]
+def get_connection_param(IP):
+    URL = "index.php?action=gate&a2=connect"
+    
+    # get page
     page = get_page(URL)
 
-    # ensure connection was successful
-    if get_current_connection() != IP:
-        return -2
-    else:
-        return 0
+    # extract beginning and end
+    URLencoded = page.find_all("script")[1].get_text().strip()[16:-4]
+    beginning = urllib.parse.unquote(URLencoded[777:810])
+    end = urllib.parse.unquote(URLencoded[894:933])
+
+    # hash value
+    string_to_hash = beginning+IP+end
+    hash_value = hashlib.md5(string_to_hash.encode()).hexdigest()
+
+    # return param
+    return beginning+"="+hash_value
 
 
 # used for testing functions above
 if __name__ == "__main__":
-    ""
+    connect("18.227.145.108")

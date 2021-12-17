@@ -25,6 +25,7 @@ This Python library is used to interface with the `local.db` SQLite file that st
 - `connect_to_db` - connects to the `local.db` database file
 - `IPDB_to_localDB` - extracts information from the local IP database and updates the `local.db` file with it
 - `get_IP_attributes` - returns information about a specific IP from the `local.db` file for other functions to use
+- `get_IP_list` - returns a list of all the IPs in `local.db`
 
 ### `libgateway.py`
 This Python library performs all gateway-related activities, such as retrieving logs and connecting to IPs.
@@ -41,6 +42,7 @@ This Python library contains many of the higher-level operations. Instead of per
 **Functions**
 - `process_new_IP` - when a new IP address is discovered, basic information is retrieved and stored in `local.db`
 - `process_IP_as_admin` - when a new IP address has been cracked and admin access is obtained, extensive information is retrieved and stored in `local.db`
+- `process_all_IPs` - goes through all the IPs in the local database, updates information, and looks for new IPs
 
 ### `main.py`
 This Python script has been created to implement the functions in `libactions.py` (or other imported libraries).

@@ -13,7 +13,7 @@ import sqlite3
 from libbasic import get_page
 
 # constants
-VALID_COLUMN_NAMES = ["ipAddress", "name", "type", "connectParam", "page", "admin", "minimum_protect", "owned", "running", "files", "cpu", "memory", "bandwidth", "lastlog"]
+VALID_COLUMN_NAMES = ["ipAddress", "name", "type", "page", "admin", "minimum_protect", "owned", "running", "files", "cpu", "memory", "bandwidth", "lastlog"]
 
 
 #####
@@ -34,7 +34,7 @@ def connect_to_db():
     conn = sqlite3.connect('local.db', isolation_level=None)
 
     # create table if it doesn't exist
-    conn.execute('CREATE TABLE if not exists servers (ipAddress TEXT PRIMARY KEY, name TEXT, type TEXT, connectParam TEXT, page INTEGER, admin BOOLEAN, minimum_protect TEXT, owned BOOLEAN, running TEXT, files TEXT, cpu TEXT, memory TEXT, bandwidth TEXT, lastlog TEXT)')
+    conn.execute('CREATE TABLE if not exists servers (ipAddress TEXT PRIMARY KEY, name TEXT, type TEXT, page INTEGER, admin BOOLEAN, minimum_protect TEXT, owned BOOLEAN, running TEXT, files TEXT, cpu TEXT, memory TEXT, bandwidth TEXT, lastlog TEXT)')
 
     return conn
 
@@ -90,7 +90,6 @@ def IPDB_to_localDB(IP="none"):
             # loop through elements and extract information
             for tr in trs:
                 # get information
-                connectParam = tr.find_all("td")[0].find_all("td")[0].find_all("a")[0]["href"].split("&")[3]
                 ipAddress = tr.find_all("td")[0].find_all("td")[0].find_all("a")[0]["href"].split("&")[2][7:]
                 name = ' '.join(tr.find_all("td")[5].get_text().split())
                 admin = (tr.find_all("td")[6].get_text() == "Yes")
@@ -103,10 +102,10 @@ def IPDB_to_localDB(IP="none"):
                 # if IP exists already...
                 elif len(cursor.execute("SELECT name FROM servers WHERE ipAddress = ?", (ipAddress,)).fetchall()) != 0:
                     # update information
-                    cursor.execute("UPDATE servers SET name = ?, type = ?, connectParam = ?, page = ?, admin = ?, owned = ? WHERE ipAddress = ?", (name, server_type, connectParam, counter, admin, owned, ipAddress))
+                    cursor.execute("UPDATE servers SET name = ?, type = ?, page = ?, admin = ?, owned = ? WHERE ipAddress = ?", (name, server_type, counter, admin, owned, ipAddress))
                 else:
                     # add new row to database
-                    cursor.execute("INSERT INTO servers VALUES (?, ?, ?, ?, ?, ?, '', ?, '', '', '', '', '', '')", (ipAddress, name, server_type, connectParam, counter, admin, owned))
+                    cursor.execute("INSERT INTO servers VALUES (?, ?, ?, ?, ?, '', ?, '', '', '', '', '', '')", (ipAddress, name, server_type, counter, admin, owned))
 
             # increase counter to see if more logs on next page
             counter += 1
@@ -154,6 +153,33 @@ def get_IP_attributes(IP, attributes):
         print("Invalid IP address")
         conn.close()
         return -1
+
+
+#####
+# 
+# Parameter(s):
+#     none
+# Return value(s):
+#     List of all IP addresses in local.db
+# Description:
+#     Retrieves a list of all the IP addresses in the
+#     database for mass scanning and reconnaissance.
+# 
+#####
+def get_IP_list():
+    # connect to DB
+    conn = connect_to_db()
+    cursor = conn.cursor()
+
+    # execute query
+    results = cursor.execute("SELECT ipAddress FROM servers").fetchall()
+
+    # put IPs into list
+    ips = []
+    for row in results:
+        ips.append(row[0])
+
+    return ips
 
 
 # used for testing functions above
