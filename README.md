@@ -35,13 +35,14 @@ This Python library performs all gateway-related activities, such as retrieving 
 - `get_current_connection` - returns the remote IP address currently connected to
 - `get_my_IP` - returns the IP address of local server
 - `connect` - connects to a specified remote address
+- `attempt_crack_password` - attempts to crack the password of a remote server
 
 ### `libactions.py`
 This Python library contains many of the higher-level operations. Instead of performing simple tasks like connecting or retrieving logs, these functions combine many of those in a desired way to perform log harvesting, cracking, and more.
 
 **Functions**
-- `process_new_IP` - when a new IP address is discovered, basic information is retrieved and stored in `local.db`
-- `process_IP_as_admin` - when a new IP address has been cracked and admin access is obtained, extensive information is retrieved and stored in `local.db`
+- `process_IP_basic` - basic, unprivileged information about an IP is retrieved and stored in `local.db`
+- `process_IP_as_admin` - when admin access is obtained, extensive information is retrieved and stored in `local.db`
 - `process_all_IPs` - goes through all the IPs in the local database, updates information, and looks for new IPs
 
 ### `main.py`

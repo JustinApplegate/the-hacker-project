@@ -187,6 +187,11 @@ def get_connection_param(IP):
     return beginning+"="+hash_value
 
 
+# check if admin and already connected
+def attempt_crack_password(IP):
+    ""
+
+
 # used for testing functions above
 if __name__ == "__main__":
-    connect("18.227.145.108")
+    ""
