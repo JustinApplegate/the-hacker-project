@@ -12,6 +12,9 @@ import sqlite3
 # local imports
 from libbasic import get_page
 
+# constants
+VALID_COLUMN_NAMES = ["ipAddress", "name", "type", "connectParam", "page", "admin", "minimum_protect", "owned", "running", "files", "cpu", "memory", "bandwidth", "lastlog"]
+
 
 #####
 # 
@@ -29,7 +32,6 @@ from libbasic import get_page
 def connect_to_db():
     # initialize database
     conn = sqlite3.connect('local.db', isolation_level=None)
-    print("Connected to database")
 
     # create table if it doesn't exist
     conn.execute('CREATE TABLE if not exists servers (ipAddress TEXT PRIMARY KEY, name TEXT, type TEXT, connectParam TEXT, page INTEGER, admin BOOLEAN, minimum_protect TEXT, owned BOOLEAN, running TEXT, files TEXT, cpu TEXT, memory TEXT, bandwidth TEXT, lastlog TEXT)')
@@ -40,21 +42,21 @@ def connect_to_db():
 #####
 # 
 # Parameter(s):
-#     none
+#     IP (optional) - a specific IP can be updated instead of all IPs
 # Return value(s):
 #     none
 # Description:
 #     Extracts all the information from the local IP database and
-#     inserts it into the local Sqlite3 file, local.db.
+#     inserts it into the local Sqlite3 file, local.db. If no IP is
+#     specified, then all IPs are updated. This option is added in
+#     to decrease update times when only specific information is
+#     needed.
 # 
 #####
-def IPDB_to_localDB():
+def IPDB_to_localDB(IP="none"):
     # connect to DB
     conn = connect_to_db()
     cursor = conn.cursor()
-
-    # import information
-    print("Importing information from IP DB to local DB...")
 
     # loops through Public, Private, and Secret servers to determine type
     exts = ['pub', 'priv', 'sec']
@@ -94,8 +96,12 @@ def IPDB_to_localDB():
                 admin = (tr.find_all("td")[6].get_text() == "Yes")
                 owned = (tr.find_all("td")[7].get_text() == "Gateway")
 
+                # if IP is not wanted
+                if (ipAddress != IP) and (IP != "none"):
+                    "Skip"
+
                 # if IP exists already...
-                if len(cursor.execute("SELECT name FROM servers WHERE ipAddress = ?", (ipAddress,)).fetchall()) != 0:
+                elif len(cursor.execute("SELECT name FROM servers WHERE ipAddress = ?", (ipAddress,)).fetchall()) != 0:
                     # update information
                     cursor.execute("UPDATE servers SET name = ?, type = ?, connectParam = ?, page = ?, admin = ?, owned = ? WHERE ipAddress = ?", (name, server_type, connectParam, counter, admin, owned, ipAddress))
                 else:
@@ -105,10 +111,51 @@ def IPDB_to_localDB():
             # increase counter to see if more logs on next page
             counter += 1
 
-    print("Completed")
     conn.close()
+
+
+#####
+# 
+# Parameter(s):
+#     IP - IP address of the desired server
+#     attributes - an array of column names (or attributes) for desired info
+# Return value(s):
+#     Tuple of desired information in same order as attributes
+#     -1 is returned if an error is encountered
+# Description:
+#     Given specific attributes/column names, a query is made to
+#     the local database and the information is returned for the
+#     IP address specified.
+# 
+#####
+def get_IP_attributes(IP, attributes):
+    # connect to DB
+    conn = connect_to_db()
+    cursor = conn.cursor()
+
+    # ensure column names are correct (whitelisted)
+    columns = ""
+    for attribute in attributes:
+        if attribute not in VALID_COLUMN_NAMES:
+            print("Invalid column name")
+            conn.close()
+            return -1
+        else:
+            columns += attribute + ","
+
+    # execute query
+    results = cursor.execute("SELECT "+columns[:-1]+" FROM servers WHERE ipAddress = ?", (IP,)).fetchall()
+
+    # ensure IP address exists and row returned
+    if len(results)>0:
+        conn.close()
+        return results[0]
+    else:
+        print("Invalid IP address")
+        conn.close()
+        return -1
 
 
 # used for testing functions above
 if __name__ == "__main__":
-    IPDB_to_localDB()
+    ""

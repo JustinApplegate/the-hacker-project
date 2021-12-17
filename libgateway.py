@@ -7,6 +7,7 @@
 
 ### IMPORTS ###
 from libbasic import get_page
+from libdatabase import get_IP_attributes, IPDB_to_localDB
 
 
 #####
@@ -22,7 +23,9 @@ from libbasic import get_page
 #     }
 # Description:
 #     Returns the log IDs, text, and timestamps for local or
-#     remote addresses.
+#     remote addresses. If the server isn't already connected
+#     to the remote host, a blank array is returned. This must
+#     be done before requesting logs.
 # 
 #####
 def get_logs(IP="localhost"):
@@ -34,10 +37,11 @@ def get_logs(IP="localhost"):
         # local logs or logs for a remote address
         URL = "index.php?action=gate&a2=logs&_o="+str(counter*10)
 
-        # connect to remote host if not already
+        # change settings for remote host
         if IP != "localhost":
             if IP != get_current_connection():
-                "connect here"
+                print("Not connected to remote host")
+                return []
             URL += "&rem=1"
 
         # get the page and start parsing
@@ -111,12 +115,85 @@ def get_my_IP():
     return IP
 
 
-# needs to contact IP db each time
+#####
+# 
+# Parameter(s):
+#     IP - IP address of server to connect to
+# Return value(s):
+#     -3 if the connection was unsuccessful after database refresh
+#     -2 if attempting to connect to self
+#     -1 if connectParam couldn't be retrieved from database
+#     0 if connection was successful
+# Description:
+#     Connects to the IP address specified in the parameter. If
+#     the connection threw no errors but was unsuccessful, the
+#     database is refreshed for that IP address (most likely bad
+#     connectParam) and it is attempted again.
+# 
+#####
 def connect(IP):
-    URL = "index.php?action=gate&a2=connect&con_ip="+IP+"&OcIGLyvrNk=0a84518ad58669999e83e657184fce82"
-    resp = get_page(URL)
+    # ensure not trying to connect to self
+    if IP == get_my_IP():
+        print("Cannot connect to self")
+        return -2
+
+    # try connecting
+    return_code = connect_help(IP)
+
+    # if page was requested but no connection made, database needs to be updated
+    if return_code == -2:
+        print("Refreshing connectParam and connecting again...")
+        IPDB_to_localDB(IP)
+        
+        # try connecting again
+        if connect_help(IP) == -2:
+            print("Connection unsuccessful")
+            return -3
+    
+    # if error was thrown while connecting
+    elif return_code == -1:
+        print("ConnectParam could not be retrieved from database")
+        return -1
+
+    # all good
+    else:
+        return 0
+
+
+#####
+# 
+# Parameter(s):
+#     IP - IP address of server to connect to
+# Return value(s):
+#     -2 if the connection was unsuccessful
+#     -1 if connectParam couldn't be retrieved from database
+#     0 if connection was successful
+# Description:
+#     Helper function for the connect() function. Retrieves the
+#     connectParam from the database, sends the HTTP request, and
+#     checks to see if the connection succeeded.
+# 
+#####
+def connect_help(IP):
+    # get connect parameter
+    connectParam = get_IP_attributes(IP, ["connectParam"])
+
+    # check for error
+    if connectParam == -1:
+        print("Connect failed - connectParam not received")
+        return -1
+
+    # connect
+    URL = "index.php?action=gate&a2=connect&con_ip="+IP+"&"+connectParam[0]
+    page = get_page(URL)
+
+    # ensure connection was successful
+    if get_current_connection() != IP:
+        return -2
+    else:
+        return 0
 
 
 # used for testing functions above
 if __name__ == "__main__":
-    print(get_logs("176.126.190.21"))
+    ""

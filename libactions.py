@@ -17,3 +17,7 @@ def process_new_IP():
 #
 def process_IP_as_admin():
     ""
+
+# used for testing functions above
+if __name__ == "__main__":
+    ""

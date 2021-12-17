@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 ### CONSTANTS ###
 BASEURL = "http://www.hacker-project.com/"
 USERAGENT = "yourmom"
+FAKE_LOG = "admin logged in from [17.144.148.127]"
 
 
 #####
@@ -29,6 +30,7 @@ USERAGENT = "yourmom"
 #     Given a specific page, this will use the BASEURL
 #     constant and PHPSESSID local environmental variable
 #     and return the HTML text to be parsed with BeautifulSoup.
+#     The user is automatically logged in if logged out.
 # 
 #####
 def get_page(page, method="GET", data="", headers={'User-Agent': USERAGENT}):
@@ -40,10 +42,11 @@ def get_page(page, method="GET", data="", headers={'User-Agent': USERAGENT}):
 
         # if error thrown
         if str(response.status_code)[:1] != "2":
-            return "Non-OK status code returned - "+str(response.status_code)
+            print("Non-OK status code returned - "+str(response.status_code))
+            return -1
 
         # if not logged in
-        elif "login or create a new account" in response.text:
+        elif ("login or create a new account" in response.text) or ("Accept terms and conditions?" in response.text):
             print("Logging in again...")
             login()
 
@@ -114,4 +117,4 @@ def get_AP():
 
 # used for testing functions above
 if __name__ == "__main__":
-    print(get_AP())
+    ""
