@@ -47,3 +47,6 @@ This Python library contains many of the higher-level operations. Instead of per
 
 ### `main.py`
 This Python script has been created to implement the functions in `libactions.py` (or other imported libraries).
+
+## Scripts
+This folder contains scripts that can be run on a regular basis (individually) and will perform tedious actions regularly. Setting up a cronjob to execute these scripts is recommended. Any information that needs to be communicated will be done through log files.

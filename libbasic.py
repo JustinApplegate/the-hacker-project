@@ -1,6 +1,13 @@
 ################################################################
 #
-# Description
+# All functions here are helpers that implement basic
+# functionality for the game.
+# 
+# Functions:
+#  - get_page - returns the HTML text of a page
+#  - login - logs in to the game
+#  - get_money - gets the amount of HPD owned
+#  - get_AP - gets the number of available Action Points
 #
 ################################################################
 
@@ -13,7 +20,7 @@ from bs4 import BeautifulSoup
 
 ### CONSTANTS ###
 BASEURL = "http://www.hacker-project.com/"
-USERAGENT = "yourmom"
+USERAGENT = "Legoclones"
 FAKE_LOG = "admin logged in from [17.144.148.127]"
 
 

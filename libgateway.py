@@ -1,6 +1,16 @@
 ################################################################
 #
-# Description
+# All functions here relate to actions that can be performed
+# with the gateway. 
+# 
+# Functions:
+#  - get_logs - gets all the logs for an IP
+#  - get_current_connection - gets the IP of the current
+#      connection
+#  - get_my_IP - gets the IP of the current server
+#  - connect - connects to an IP
+#  - get_connection_param - helper function for connect
+#  - attempt_crack_password - attempts to crack the password
 #
 ################################################################
 

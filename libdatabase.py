@@ -1,6 +1,13 @@
 ################################################################
 #
-# Description
+# All functions located here relate specifically to maintaining
+# and updating the local database file. 
+# 
+# Functions:
+#  - connect_to_db - connects to local db
+#  - IPDB_to_localDB - syncs local db with online IP database
+#  - get_IP_attributes - returns attributes of an IP
+#  - get_IP_list - returns a list of all IPs
 #
 ################################################################
 
@@ -117,17 +124,18 @@ def IPDB_to_localDB(IP="none"):
 # 
 # Parameter(s):
 #     IP - IP address of the desired server
-#     attributes - an array of column names (or attributes) for desired info
+#     attributes (optional) - an array of column names (or attributes) to return
 # Return value(s):
 #     Tuple of desired information in same order as attributes
 #     -1 is returned if an error is encountered
 # Description:
 #     Given specific attributes/column names, a query is made to
 #     the local database and the information is returned for the
-#     IP address specified.
+#     IP address specified. If no attributes are specified, then 
+#     all are returned.
 # 
 #####
-def get_IP_attributes(IP, attributes):
+def get_IP_attributes(IP, attributes=VALID_COLUMN_NAMES):
     # connect to DB
     conn = connect_to_db()
     cursor = conn.cursor()
