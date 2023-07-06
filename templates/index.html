@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <div class="card text-bg-info" style="width: 18rem;">
+            <div class="card-header">
+                Basic Info
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Money: {{money}}</li>
+                <li class="list-group-item">AP: {{action_points}}</li>
+                <li class="list-group-item">IP: {{my_ip}}</li>
+            </ul>
+        </div>
+    </div>
+    <div class="col">
+        <p>second col</p>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <table class="table">
+        <thead><tr>
+            <th scope="col">IP Address</th>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">Page</th>
+            <th scope="col">Admin</th>
+            <th scope="col">Minimum Protection</th>
+            <th scope="col">Owned</th>
+            <th scope="col">CPU</th>
+            <th scope="col">Memory</th>
+            <th scope="col">Bandwidth</th>
+            <th scope="col">Last Updated</th>
+        </tr></thead>
+        {% for ip in ips -%}
+        <tr>
+            <td>{{ ips[ip][0] }}</td>
+            <td>{{ ips[ip][1] }}</td>
+            <td>{{ ips[ip][2] }}</td>
+            <td>{{ ips[ip][3] }}</td>
+            <td>{% if ips[ip][4] %} Yes {% else %} No {% endif %}</td>
+            <td>{% if ips[ip][4] %} N/A {% else %} {{ ips[ip][5]}}  {% endif %}</td>
+            <td>{% if ips[ip][6] %} Yes {% else %} No {% endif %}</td>
+            <td>{{ ips[ip][9] }}</td>
+            <td>{{ ips[ip][10] }}</td>
+            <td>{{ ips[ip][11] }}</td>
+            <td>{{ ips[ip][13] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

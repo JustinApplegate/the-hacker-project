@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <title>The Hacker Project Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="text-bg-secondary">
+    {% include 'navigation.html' %}
+    
+    <div class="container-xxl" id="main-page">
+        <div class="row mt-3" id="alerts"></div>
+        <div class="row mt-3">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/index.js"></script>
+</body>
+
+</html>

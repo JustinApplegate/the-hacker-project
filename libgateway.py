@@ -11,6 +11,8 @@
 #  - connect - connects to an IP
 #  - get_connection_param - helper function for connect
 #  - attempt_crack_password - attempts to crack the password
+#  - get_running_software - gets the software running on an IP
+#  - update_internal_info - updates the internal info of an IP
 #
 ################################################################
 
@@ -19,9 +21,12 @@
 # global imports
 import urllib.parse
 import hashlib
+import json
+import datetime
 
 # local imports
 from libbasic import get_page
+from libdatabase import get_IP_attributes, set_IP_attributes
 
 
 #####
@@ -140,9 +145,12 @@ def get_my_IP():
 # Description:
 #     Connects to the IP address specified in the parameter. If an
 #     attempt was made to connect to oneself, an error code is
-#     returned.
+#     returned. If the connection was successful, then the local 
+#     database is updated with internal information.
 # 
 #####
+
+# wipe logs & update info on previously-connected IP before actually connecting
 def connect(IP):
     # ensure not trying to connect to self
     if IP == get_my_IP():
@@ -160,8 +168,10 @@ def connect(IP):
     if get_current_connection() != IP:
         print("Could not connect to IP")
         return -1
-    else:
-        return 0
+    
+    # update remote & local information in local db
+    update_internal_info(IP)
+    update_internal_info()
 
 
 #####
@@ -199,7 +209,119 @@ def get_connection_param(IP):
 
 # check if admin and already connected
 def attempt_crack_password(IP):
-    ""
+    if not get_IP_attributes(IP, ['admin']):
+        print("Already admin")
+        return -1
+    
+    if get_current_connection() != IP:
+        print("Not connected to IP")
+        return -2
+    
+    # need to know running software before crack
+
+
+#####
+# 
+# Parameter(s):
+#     IP (optional) - the IP address of the server to extract software info
+# Return value(s):
+#     Returns an array of objects in the format:
+#     {
+#         'id': 000000,
+#         'type': 'Log UnDeleter',
+#         'name': 'Basic Log UnDeleter',
+#         'version': '0.1',
+#         'CPU': 50,
+#         'memory': 3000,
+#         'bandwidth': 0
+#     }
+# Description:
+#     Returns a list of all software running on the 
+#     given IP address.
+# 
+#####
+def get_running_software(IP="localhost"):
+    path = "index.php?action=gate&a2=run"
+
+    # connect to remote host if not already connected
+    if IP != "localhost":
+        if IP != get_current_connection():
+            connect(IP)
+        path += "&rem=1"
+
+    page = get_page(path)
+
+    # get script tags
+    software = []
+    scripts = page.findAll("script")
+    for script in scripts:
+        if str(script.text)[:14] == 'document.write':
+            # decode tags with software info
+            new_text = urllib.parse.unquote(script.text[25:-4])
+
+            id = int(new_text.split('snl">')[1].split("<")[0])
+            type = new_text.split('p1">')[1].split("<")[0]
+            name = new_text.split('sm">')[1].split("<")[0]
+            version = new_text.split('sm2">')[1].split("<")[0]
+            cpu = int(new_text.split('sm">')[2].split("<")[0])
+            memory = int(new_text.split('sm">')[3].split("<")[0])
+            bandwidth = int(new_text.split('sm">')[4].split("<")[0])
+
+            software.append({
+                'id': id,
+                'type': type,
+                'name': name,
+                'version': version,
+                'CPU': cpu,
+                'memory': memory,
+                'bandwidth': bandwidth
+            })
+
+    return software
+
+
+#####
+# 
+# Parameter(s):
+#     IP (optional) - the IP address of the server to update internal info
+# Return value(s):
+#     None
+# Description:
+#     The IP specified will have information only available 
+#     when connected (such as running software, files, etc.) 
+#     updated in the local database.
+# 
+#####
+def update_internal_info(IP="localhost"):
+    # CPU
+
+    # memory
+
+    # bandwidth
+
+    # logs
+
+    # running processes
+    running = json.dumps(get_running_software(IP))
+
+    # files
+
+    # last update
+    last_update = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+
+    # update
+    if IP == "localhost":
+        set_IP_attributes(get_my_IP(), 
+            ['running', 'lastupdated'], 
+            [running, last_update]
+        )
+    else:
+        set_IP_attributes(IP, 
+            ['running', 'lastupdated'], 
+            [running, last_update]
+        )
+
+    return
 
 
 # used for testing functions above

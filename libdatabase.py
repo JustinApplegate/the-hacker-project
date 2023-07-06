@@ -7,6 +7,7 @@
 #  - connect_to_db - connects to local db
 #  - IPDB_to_localDB - syncs local db with online IP database
 #  - get_IP_attributes - returns attributes of an IP
+#  - set_IP_attributes - sets attributes of an IP
 #  - get_IP_list - returns a list of all IPs
 #
 ################################################################
@@ -20,7 +21,7 @@ import sqlite3
 from libbasic import get_page
 
 # constants
-VALID_COLUMN_NAMES = ["ipAddress", "name", "type", "page", "admin", "minimum_protect", "owned", "running", "files", "cpu", "memory", "bandwidth", "lastlog"]
+VALID_COLUMN_NAMES = ["ipAddress", "name", "type", "page", "admin", "minimum_protect", "owned", "running", "files", "cpu", "memory", "bandwidth", "lastlog", "lastupdated"]
 
 
 #####
@@ -41,7 +42,7 @@ def connect_to_db():
     conn = sqlite3.connect('local.db', isolation_level=None)
 
     # create table if it doesn't exist
-    conn.execute('CREATE TABLE if not exists servers (ipAddress TEXT PRIMARY KEY, name TEXT, type TEXT, page INTEGER, admin BOOLEAN, minimum_protect TEXT, owned BOOLEAN, running TEXT, files TEXT, cpu TEXT, memory TEXT, bandwidth TEXT, lastlog TEXT)')
+    conn.execute('CREATE TABLE if not exists servers (ipAddress TEXT PRIMARY KEY, name TEXT, type TEXT, page TEXT, admin BOOLEAN, minimum_protect TEXT, owned BOOLEAN, running TEXT, files TEXT, cpu TEXT, memory TEXT, bandwidth TEXT, lastlog TEXT, lastupdated TEXT)')
 
     return conn
 
@@ -109,10 +110,10 @@ def IPDB_to_localDB(IP="none"):
                 # if IP exists already...
                 elif len(cursor.execute("SELECT name FROM servers WHERE ipAddress = ?", (ipAddress,)).fetchall()) != 0:
                     # update information
-                    cursor.execute("UPDATE servers SET name = ?, type = ?, page = ?, admin = ?, owned = ? WHERE ipAddress = ?", (name, server_type, counter, admin, owned, ipAddress))
+                    cursor.execute("UPDATE servers SET name = ?, type = ?, page = ?, admin = ?, owned = ? WHERE ipAddress = ?", (name, server_type, str(counter), admin, owned, ipAddress))
                 else:
                     # add new row to database
-                    cursor.execute("INSERT INTO servers VALUES (?, ?, ?, ?, ?, '', ?, '', '', '', '', '', '')", (ipAddress, name, server_type, counter, admin, owned))
+                    cursor.execute("INSERT INTO servers VALUES (?, ?, ?, ?, ?, '', ?, '', '', '', '', '', '', 'N/A')", (ipAddress, name, server_type, str(counter), admin, owned))
 
             # increase counter to see if more logs on next page
             counter += 1
@@ -162,6 +163,47 @@ def get_IP_attributes(IP, attributes=VALID_COLUMN_NAMES):
         conn.close()
         return -1
 
+
+#####
+# 
+# Parameter(s):
+#     IP - IP address of the desired server
+#     attributes - an array of column names (or attributes) to update
+#     values - an array of values to update the attributes with
+# Return value(s):
+#     0 is returned if no errors were encountered
+#     -1 is returned if an error is encountered
+# Description:
+#     An array of attributes and values (same corresponding 
+#     indexes) is passed to this function, which updates the 
+#     local database with those attributes. 
+# 
+#####
+def set_IP_attributes(IP, attributes, values):
+    # connect to DB
+    conn = connect_to_db()
+    cursor = conn.cursor()
+
+    if len(attributes) != len(values):
+        print("Attributes and values must be same length")
+        conn.close()
+        return -1
+
+    # ensure column names are correct (whitelisted)
+    query = "UPDATE servers SET "
+    for i in range(len(attributes)):
+        if attributes[i] not in VALID_COLUMN_NAMES:
+            print("Invalid column name")
+            conn.close()
+            return -1
+        else:
+            query += attributes[i] + " = '" + str(values[i]).replace("'","") + ("', " if i != len(attributes)-1 else "'")
+
+    # execute query
+    cursor.execute(query + " WHERE ipAddress = ?", (IP,))
+
+    return 0
+    
 
 #####
 # 
