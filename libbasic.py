@@ -28,23 +28,8 @@ USERAGENT = "Legoclones"
 FAKE_LOG = "admin logged in from [17.144.148.127]"
 
 
-#####
-# 
-# Parameter(s):
-#     page - local path for the URL [example: 'index.php?action=gate']
-#     method (optional) - HTTP method, default value is 'GET'
-#     data (optional) - values to be passed through the request, default value is {}
-# Return value(s):
-#     Soup object for BeautifulSoup parser
-#     Status code (if error thrown)
-# Description:
-#     Given a specific page, this will use the BASEURL
-#     constant and PHPSESSID local environmental variable
-#     and return the HTML text to be parsed with BeautifulSoup.
-#     The user is automatically logged in if logged out.
-# 
-#####
-def get_page(page, method="GET", data="", headers={}):
+
+def get_page(page: str, method: str = "GET", data: str = "", headers: dict = {}):
     cookies = dict(PHPSESSID=dotenv_values(".env")["PHPSESSID"])
 
     if 'User-Agent' not in headers:
@@ -52,7 +37,7 @@ def get_page(page, method="GET", data="", headers={}):
 
     while True:
         # get response
-        response = requests.request(method, BASEURL+str(page), cookies=cookies, data=data, headers=headers)
+        response = requests.request(method, BASEURL+page, cookies=cookies, data=data, headers=headers)
 
         # if error thrown
         if str(response.status_code)[:1] != "2":
@@ -91,9 +76,9 @@ def login():
         method="POST",
         data="user="+username+"&pwd="+password+"&submit=Login&action=login",
         headers={
-            "Content-Type": "application/x-www-form-urlencoded",
-            'User-Agent': USERAGENT,
-        })
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+    )
 
 
 #####

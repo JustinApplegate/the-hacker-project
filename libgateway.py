@@ -263,9 +263,9 @@ def get_running_software(IP="localhost"):
             type = new_text.split('p1">')[1].split("<")[0]
             name = new_text.split('sm">')[1].split("<")[0]
             version = new_text.split('sm2">')[1].split("<")[0]
-            cpu = int(new_text.split('sm">')[2].split("<")[0])
-            memory = int(new_text.split('sm">')[3].split("<")[0])
-            bandwidth = int(new_text.split('sm">')[4].split("<")[0])
+            cpu = int(float(new_text.split('sm">')[2].split("<")[0]))
+            memory = int(float(new_text.split('sm">')[3].split("<")[0]))
+            bandwidth = int(float(new_text.split('sm">')[4].split("<")[0]))
 
             software.append({
                 'id': id,
@@ -278,6 +278,30 @@ def get_running_software(IP="localhost"):
             })
 
     return software
+
+
+#####
+# 
+# Parameter(s):
+#     IP (optional) - the IP address of the server to update internal info
+# Return value(s):
+#     None
+# Description:
+#     The IP specified will have information only available 
+#     when connected (such as running software, files, etc.) 
+#     updated in the local database.
+# 
+#####
+def get_hardware(IP="localhost"):
+    path = "index.php?action=gate&a2=run"
+
+    # connect to remote host if not already connected
+    if IP != "localhost":
+        if IP != get_current_connection():
+            connect(IP)
+        path += "&rem=1"
+
+    page = get_page(path)
 
 
 #####
@@ -307,19 +331,16 @@ def update_internal_info(IP="localhost"):
     # files
 
     # last update
-    last_update = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+    last_update = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
     # update
     if IP == "localhost":
-        set_IP_attributes(get_my_IP(), 
-            ['running', 'lastupdated'], 
-            [running, last_update]
-        )
-    else:
-        set_IP_attributes(IP, 
-            ['running', 'lastupdated'], 
-            [running, last_update]
-        )
+        IP = get_my_IP()
+        
+    set_IP_attributes(IP, 
+        ['running', 'lastupdated'], 
+        [running, last_update]
+    )
 
     return
 

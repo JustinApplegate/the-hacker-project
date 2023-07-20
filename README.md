@@ -1,11 +1,12 @@
 # The Hacker Project Automation
-This project was started to automate [The Hacker Project](http://www.hacker-project.com). In an attempt to decrease boring, manual, and repetitive actions, I have written Python scripts that will perform these actions simply by calling a function. As of this moment, these scripts only perform basic reconnaissance and cracking. It only has the ability to connect to IPs, read logs, crack newly found IPs, and scour them for logs. This will continue until all IPs have been scraped or cannot be cracked.
+This project was started to provide APIs that can interface with the game through the Python `requests` library, lending itself to automation. In addition, a Flask webserver was designed to provide the customer with a nice graphical interface so all the automation can be programmed, then deployed with the click of a button. 
 
-## Layout
-Each of the files that start with `lib` are custom library files meant to be imported in other files. `main.py` is the main script that utilizes the functions defined in the libraries to perform the desired operation.
 
-### `libbasic.py`
-This Python library defines constants used across the libraries and core functions, such as retrieving pages and logging in. 
+*Note - It only has the ability to connect to IPs, read logs, crack newly found IPs, and scour them for logs. This will continue until all IPs have been scraped or cannot be cracked.*
+
+# Layout
+## `libbasic.py`
+This Python library defines constants and core functions for the game, such as retrieving pages and logging in. 
 
 **Constants**
 - `BASEURL` - the base url for The Hacker Project
@@ -13,6 +14,23 @@ This Python library defines constants used across the libraries and core functio
 - `FAKE_LOG` - whenever a log is created on any remote host, it is replaced with this log entry instead
 
 **Functions**
+- `get_page(page, method="GET", data="", headers={}) -> BeautifulSoup`
+    - Description
+        - Given a specific page, this function will use the `BASEURL` constant and `PHPSESSID` local environmental variable to request the endpoint, and returns the HTML text to be parsed with BeautifulSoup. The user is automatically logged in if logged out.
+    - Parameters
+        - `page` [str] - path and query string for the URL to request, without the leading slash (`/`)
+            - Example - `'index.php?param1=param2'`
+        - `method` [str] (optional) - HTTP method, default value is `'GET'`
+            - Example - `'POST'`
+        - `data` [str] (optional) - data to provided in the request body, default is `''`
+            - Example - `'ip=1.1.1.1&con=rem'`
+        - `headers` [dict] (optional) - dict of HTTP headers to include in the request. Note that the `User-Agent` header will be added if not specified. Default value is `{}`
+            - Example - `{"Content-Type": "application/json"}`
+    - Return value
+        - `BeautifulSoup`
+
+
+
 - `get_page` - returns a BeautifulSoup object with the request page and parameters
 - `login` - logs a user in
 - `get_money` - retrieves current HPD
